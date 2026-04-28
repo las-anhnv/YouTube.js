@@ -1,1 +1,49 @@
 
+name: Deploy JS Bundle to Pages
+
+on:
+  push:
+    branches: ["main"] # Chạy khi bạn push vào branch main
+
+# Cấp quyền cho GitHub Actions để có thể ghi dữ liệu vào Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps:deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Hoặc version bạn đang dùng
+
+      - name: Install dependencies and Build
+        run: |
+          npm install
+          npm run build # Lệnh này phải tạo ra thư mục output (thường là 'dist' hoặc 'build')
+
+      - name: Create Metadata file
+        run: |
+          # Tạo file metadata.json chứa mã commit để App SwiftUI check version
+          echo "{\"version\": \"${{ github.sha }}\"}" > dist/metadata.json 
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist' # ĐƯỜNG DẪN QUAN TRỌNG: Phải trùng với thư mục output sau khi build JS
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
