@@ -1,11 +1,9 @@
-
-name: Deploy JS Bundle to Pages
+name: Deploy YouTubei JS Bundle
 
 on:
   push:
-    branches: ["main"] # Chạy khi bạn push vào branch main
+    branches: ["main"]
 
-# Cấp quyền cho GitHub Actions để có thể ghi dữ liệu vào Pages
 permissions:
   contents: read
   pages: write
@@ -24,17 +22,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20' # Hoặc version bạn đang dùng
+          node-version: '20'
 
-      - name: Install dependencies and Build
-        run: |
-          npm install
-          npm run build # Lệnh này phải tạo ra thư mục output (thường là 'dist' hoặc 'build')
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build JS Bundle
+        run: npm run build
 
       - name: Create Metadata file
         run: |
-          # Tạo file metadata.json chứa mã commit để App SwiftUI check version
-          echo "{\"version\": \"${{ github.sha }}\"}" > dist/metadata.json 
+          # Lưu ý: metadata.json được tạo vào thư mục bundle
+          echo "{\"version\": \"${{ github.sha }}\"}" > bundle/metadata.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -42,7 +41,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # ĐƯỜNG DẪN QUAN TRỌNG: Phải trùng với thư mục output sau khi build JS
+          # ĐÃ ĐỔI THÀNH 'bundle' VÌ ĐÂY LÀ NƠI CHỨA FILE browser.js
+          path: './bundle'
 
       - name: Deploy to GitHub Pages
         id: deployment
